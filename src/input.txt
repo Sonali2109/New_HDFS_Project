@@ -1,0 +1,4 @@
+This is my input.txt file for uploading on HDFS system.
+Normal uploading operation !!
+Sonali Chaudhari.
+Sonali Chaudhari.
