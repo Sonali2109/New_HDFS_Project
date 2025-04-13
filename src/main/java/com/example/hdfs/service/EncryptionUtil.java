@@ -4,11 +4,11 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
 import java.security.*;
-import java.util.Base64;
 
 public class EncryptionUtil {
-    private static final String RSA_ALGORITHM = "RSA";
+    private static final String RSA_ALGORITHM = "RSA/ECB/PKCS1Padding";
     private static final String AES_ALGORITHM = "AES";
     private static final int RSA_KEY_SIZE = 2048;
     private static final int AES_KEY_SIZE = 256;
@@ -22,7 +22,7 @@ public class EncryptionUtil {
     public static byte[] encrypt(byte[] data, PublicKey publicKey) throws Exception {
         // Generate a random AES key
         KeyGenerator keyGen = KeyGenerator.getInstance(AES_ALGORITHM);
-        keyGen.init(AES_KEY_SIZE);
+        keyGen.init(AES_KEY_SIZE, SecureRandom.getInstanceStrong());
         SecretKey aesKey = keyGen.generateKey();
 
         // Encrypt the data with the AES key
@@ -36,30 +36,24 @@ public class EncryptionUtil {
         byte[] encryptedAesKey = rsaCipher.doFinal(aesKey.getEncoded());
 
         // Combine the encrypted AES key and the encrypted data
-        byte[] combined = new byte[encryptedAesKey.length + encryptedData.length + 4];
-        System.arraycopy(encryptedAesKey, 0, combined, 0, encryptedAesKey.length);
-        System.arraycopy(encryptedData, 0, combined, encryptedAesKey.length, encryptedData.length);
-        // Store the length of the encrypted AES key at the beginning
-        combined[encryptedAesKey.length + encryptedData.length] = (byte) (encryptedAesKey.length >> 24);
-        combined[encryptedAesKey.length + encryptedData.length + 1] = (byte) (encryptedAesKey.length >> 16);
-        combined[encryptedAesKey.length + encryptedData.length + 2] = (byte) (encryptedAesKey.length >> 8);
-        combined[encryptedAesKey.length + encryptedData.length + 3] = (byte) (encryptedAesKey.length);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(encryptedAesKey.length + encryptedData.length + 4);
+        byteBuffer.put(encryptedAesKey);
+        byteBuffer.put(encryptedData);
+        byteBuffer.putInt(encryptedAesKey.length); // Store the length of the encrypted AES key
 
-        return combined;
+        return byteBuffer.array();
     }
 
     public static byte[] decrypt(byte[] encryptedData, PrivateKey privateKey) throws Exception {
         // Read the length of the encrypted AES key
-        int aesKeyLength = ((encryptedData[encryptedData.length - 4] & 0xFF) << 24) |
-                ((encryptedData[encryptedData.length - 3] & 0xFF) << 16) |
-                ((encryptedData[encryptedData.length - 2] & 0xFF) << 8) |
-                (encryptedData[encryptedData.length - 1] & 0xFF);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
+        int aesKeyLength = byteBuffer.getInt(encryptedData.length - 4);
 
         // Extract the encrypted AES key and the encrypted data
         byte[] encryptedAesKey = new byte[aesKeyLength];
         byte[] encryptedDataBytes = new byte[encryptedData.length - aesKeyLength - 4];
-        System.arraycopy(encryptedData, 0, encryptedAesKey, 0, aesKeyLength);
-        System.arraycopy(encryptedData, aesKeyLength, encryptedDataBytes, 0, encryptedDataBytes.length);
+        byteBuffer.get(encryptedAesKey);
+        byteBuffer.get(encryptedDataBytes);
 
         // Decrypt the AES key with the RSA private key
         Cipher rsaCipher = Cipher.getInstance(RSA_ALGORITHM);
