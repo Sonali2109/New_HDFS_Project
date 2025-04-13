@@ -19,7 +19,7 @@ public class Main {
             String password = scanner.nextLine();
 
             if (!userManager.authenticate(username, password)) {
-                System.out.println("❌ Authentication failed. Exiting...");
+                System.out.println("X Authentication failed. Exiting...");
                 return;
             }
 
@@ -27,20 +27,20 @@ public class Main {
             try {
                 user = userManager.getUser(username);
             } catch (Exception e) {
-                System.out.println("❌ Error creating user: " + e.getMessage());
+                System.out.println("X Error creating user: " + e.getMessage());
                 return;
             }
 
             while (true) {
                 System.out.println("\nChoose an option:");
-                System.out.println("1️⃣ Create a folder");
-                System.out.println("2️⃣ Upload a file (encrypted)");
-                System.out.println("3️⃣ Upload a file to a specific folder (encrypted)");
-                System.out.println("4️⃣ Download a file");
-                System.out.println("5️⃣ Delete a file");
-                System.out.println("6️⃣ Delete a folder");
-                System.out.println("7️⃣ List files and folders");
-                System.out.println("8️⃣ Exit");
+                System.out.println("1. Create a folder");
+                System.out.println("2. Upload a file (encrypted)");
+                System.out.println("3. Upload a file to a specific folder (encrypted)");
+                System.out.println("4. Download a file");
+                System.out.println("5. Delete a file");
+                System.out.println("6. Delete a folder");
+                System.out.println("7. List files and folders");
+                System.out.println("8. Exit");
 
                 int choice = scanner.nextInt();
                 scanner.nextLine(); // Consume newline
@@ -105,11 +105,11 @@ public class Main {
                         break;
 
                     case 8:
-                        System.out.println("👋 Exiting...");
+                        System.out.println("Exiting...");
                         return;
 
                     default:
-                        System.out.println("❌ Invalid option. Please try again.");
+                        System.out.println("Invalid option. Please try again.");
                 }
             }
         }
